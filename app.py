@@ -5,25 +5,25 @@
 
 
 import dash
-from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
 import plotly.graph_objs as go
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
+
 df = pd.read_csv('nama_10_gdp_1_Data.csv')
 df = df[~df['GEO'].str.contains('Euro')]
 df = df.drop(['Flag and Footnotes'], axis=1)
 
-app = dash.Dash(__name__)
-server = app.server
-app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
 
 available_indicators = df['NA_ITEM'].unique()
 countries = df['GEO'].unique()
 
 app.layout = html.Div([
-            dcc.Dropdown(
                        html.Div([
                                  
                                  html.Div([
@@ -170,4 +170,3 @@ def update_x_timeseries(hoverData, yaxis_column_name, axis_type):
 
 if __name__ == '__main__':
     app.run_server()
-
