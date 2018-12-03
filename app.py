@@ -15,7 +15,9 @@ df = pd.read_csv('nama_10_gdp_1_Data.csv')
 df = df[~df['GEO'].str.contains('Euro')]
 df = df.drop(['Flag and Footnotes'], axis=1)
 
-app = dash.Dash()
+app = dash.Dash(__name__)
+    server = app.server
+app.css.append_css({"external_url": "https://codepen.io/chriddyp/pen/bWLwgP.css"})
 
 available_indicators = df['NA_ITEM'].unique()
 countries = df['GEO'].unique()
