@@ -23,155 +23,150 @@ available_indicators = df['NA_ITEM'].unique()
 countries = df['GEO'].unique()
 
 app.layout = html.Div([
-    html.Div([
-
-        html.Div([
             dcc.Dropdown(
-                id='a_xaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Gross domestic product at market prices'
-            ),
-            dcc.RadioItems(
-                id='a_xaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
-        ],
-        style={'width': '48%', 'display': 'inline-block'}),
+                       html.Div([
+                                 
+                                 html.Div([
+                                           dcc.Dropdown(
+                                                        id='crossfilter-xaxis-column',
+                                                        options=[{'label': i, 'value': i} for i in available_indicators],
+                                                        value='Gross domestic product at market prices'
+                                                        ),
+                                           dcc.RadioItems(
+                                                          id='crossfilter-xaxis-type',
+                                                          options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                                                          value='Linear',
+                                                          labelStyle={'display': 'inline-block'}
+                                                          )
+                                           ],
+                                          style={'width': '49%', 'display': 'inline-block'}),
+                                 
+                                 html.Div([
+                                           dcc.Dropdown(
+                                                        id='crossfilter-yaxis-column',
+                                                        options=[{'label': i, 'value': i} for i in available_indicators],
+                                                        value='Value added, gross'
+                                                        ),
+                                           dcc.RadioItems(
+                                                          id='crossfilter-yaxis-type',
+                                                          options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
+                                                          value='Linear',
+                                                          labelStyle={'display': 'inline-block'}
+                                                          )
+                                           ], style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
+                                 ], style={
+                                'borderBottom': 'thin lightgrey solid',
+                                'backgroundColor': 'rgb(250, 250, 250)',
+                                'padding': '10px 5px'
+                                }),
+                       
+                       html.Div([
+                                 dcc.Graph(
+                                           id='crossfilter-indicator-scatter',
+                                           hoverData={'points': [{'customdata': 'Spain'}]}
+                                           )
+                                 ], style={'width': '49%', 'display': 'inline-block', 'padding': '0 20'}),
+                       html.Div([
+                                 dcc.Graph(id='x-time-series'),
+                                 dcc.Graph(id='y-time-series'),
+                                 ], style={'display': 'inline-block', 'width': '49%'}),
+                       
+                       html.Div(dcc.Slider(
+                                           id='crossfilter-year--slider',
+                                           min=df['TIME'].min(),
+                                           max=df['TIME'].max(),
+                                           value=df['TIME'].max(),
+                                           marks={str(year): str(year) for year in df['TIME'].unique()}
+                                           ), style={'width': '49%', 'padding': '0px 20px 20px 20px'})
+                       ])
 
-        html.Div([
-            dcc.Dropdown(
-                id='a_yaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Value added, gross'
-            ),
-            dcc.RadioItems(
-                id='a_yaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
-        ],style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-    ]),
-
-    dcc.Graph(id='a_indicator-graphic'),
-
-    dcc.Slider(
-        id='a_year--slider',
-        min=df['TIME'].min(),
-        max=df['TIME'].max(),
-        value=df['TIME'].max(),
-        step=None,
-        marks={str(year): str(year) for year in df['TIME'].unique()}
-    ),
-    
-    html.Div([
-    html.Div([
-
-        html.Div([
-            dcc.Dropdown(
-                id='b_country',
-                options=[{'label': i, 'value': i} for i in countries],
-                value='Spain'
-            )
-        ],
-        style={'width': '48%', 'display': 'inline-block'}),
-
-        html.Div([
-            dcc.Dropdown(
-                id='b_yaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Value added, gross'
-            ),
-            dcc.RadioItems(
-                id='b_yaxis-type',
-                options=[{'label': i, 'value': i} for i in ['Linear', 'Log']],
-                value='Linear',
-                labelStyle={'display': 'inline-block'}
-            )
-        ],style={'width': '48%', 'float': 'right', 'display': 'inline-block'})
-    ]),
-
-    dcc.Graph(id='b_indicator-graphic'),
-
-    
-])
-])
 
 @app.callback(
-    dash.dependencies.Output('a_indicator-graphic', 'figure'),
-    [dash.dependencies.Input('a_xaxis-column', 'value'),
-     dash.dependencies.Input('a_yaxis-column', 'value'),
-     dash.dependencies.Input('a_xaxis-type', 'value'),
-     dash.dependencies.Input('a_yaxis-type', 'value'),
-     dash.dependencies.Input('a_year--slider', 'value')])
-def a_update_graph(a_xaxis_column_name, a_yaxis_column_name,
-                 a_xaxis_type, a_yaxis_type,
-                 a_year_value):
-    a_dff = df[df['TIME'] == a_year_value]
+              dash.dependencies.Output('crossfilter-indicator-scatter', 'figure'),
+              [dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
+               dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
+               dash.dependencies.Input('crossfilter-xaxis-type', 'value'),
+               dash.dependencies.Input('crossfilter-yaxis-type', 'value'),
+               dash.dependencies.Input('crossfilter-year--slider', 'value')])
+def update_graph(xaxis_column_name, yaxis_column_name,
+                 xaxis_type, yaxis_type,
+                 year_value):
+    dff = df[df['TIME'] == year_value]
     
     return {
         'data': [go.Scatter(
-            x=a_dff[a_dff['NA_ITEM'] == a_xaxis_column_name]['Value'],
-            y=a_dff[a_dff['NA_ITEM'] == a_yaxis_column_name]['Value'],
-            text=a_dff[a_dff['NA_ITEM'] == a_yaxis_column_name]['GEO'],
-            mode='markers',
-            marker={
-                'size': 15,
-                'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
-        )],
-        'layout': go.Layout(
-            xaxis={
-                'title': a_xaxis_column_name,
-                'type': 'linear' if a_xaxis_type == 'Linear' else 'log'
-            },
-            yaxis={
-                'title': a_yaxis_column_name,
-                'type': 'linear' if a_yaxis_type == 'Linear' else 'log'
-            },
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-            hovermode='closest'
-        )
-    }
-@app.callback(
-    dash.dependencies.Output('b_indicator-graphic', 'figure'),
-    [dash.dependencies.Input('b_country', 'value'),
-     dash.dependencies.Input('b_yaxis-column', 'value'),
-     dash.dependencies.Input('b_yaxis-type', 'value')
-     ])
-def b_update_graph(b_country_name, b_yaxis_column_name,
-                b_yaxis_type,
-                 ):
-    b_dff = df[df['GEO'] == b_country_name]
-    
+                            x=dff[dff['NA_ITEM'] == xaxis_column_name]['Value'],
+                            y=dff[dff['NA_ITEM'] == yaxis_column_name]['Value'],
+                            text=dff[dff['NA_ITEM'] == yaxis_column_name]['GEO'],
+                            customdata=dff[dff['NA_ITEM'] == yaxis_column_name]['GEO'],
+                            mode='markers',
+                            marker={
+                            'size': 15,
+                            'opacity': 0.5,
+                            'line': {'width': 0.5, 'color': 'white'}
+                            }
+                            )],
+                            'layout': go.Layout(
+                                                xaxis={
+                                                'title': xaxis_column_name,
+                                                'type': 'linear' if xaxis_type == 'Linear' else 'log'
+                                                },
+                                                yaxis={
+                                                'title': yaxis_column_name,
+                                                'type': 'linear' if yaxis_type == 'Linear' else 'log'
+                                                },
+                                                margin={'l': 40, 'b': 30, 't': 10, 'r': 0},
+                                                height=450,
+                                                hovermode='closest'
+                                                )
+                 }
+
+
+def create_time_series(dff, axis_type, title):
     return {
         'data': [go.Scatter(
-            x=b_dff[b_dff['NA_ITEM'] == b_yaxis_column_name]['TIME'],
-            y=b_dff[b_dff['NA_ITEM'] == b_yaxis_column_name]['Value'],
-            text=b_dff[b_dff['NA_ITEM'] == b_yaxis_column_name]['GEO'],
-            mode='lines+markers',
-            marker={
-                'size': 15,
-                'opacity': 0.5,
-                'line': {'width': 0.5, 'color': 'white'}
-            }
-        )],
-        'layout': go.Layout(
-            xaxis={
-                'title': 'Year',
-                'type': 'linear'
-            },
-            yaxis={
-                'title': b_yaxis_column_name,
-                'type': 'linear' if b_yaxis_type == 'Linear' else 'log'
-            },
-            margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
-            hovermode='closest'
-        )
+                            x=dff['TIME'],
+                            y=dff['Value'],
+                            mode='lines+markers'
+                            )],
+                            'layout': {
+                                'height': 225,
+                                    'margin': {'l': 20, 'b': 30, 'r': 10, 't': 10},
+                                        'annotations': [{
+                                                        'x': 0, 'y': 0.85, 'xanchor': 'left', 'yanchor': 'bottom',
+                                                        'xref': 'paper', 'yref': 'paper', 'showarrow': False,
+                                                        'align': 'left', 'bgcolor': 'rgba(255, 255, 255, 0.5)',
+                                                        'text': title
+                                                        }],
+                                            'yaxis': {'type': 'linear' if axis_type == 'Linear' else 'log'},
+                                                'xaxis': {'showgrid': False}
     }
+}
+
+
+@app.callback(
+              dash.dependencies.Output('x-time-series', 'figure'),
+              [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
+               dash.dependencies.Input('crossfilter-xaxis-column', 'value'),
+               dash.dependencies.Input('crossfilter-xaxis-type', 'value')])
+def update_y_timeseries(hoverData, xaxis_column_name, axis_type):
+    country_name = hoverData['points'][0]['customdata']
+    dff = df[df['GEO'] == country_name]
+    dff = dff[dff['NA_ITEM'] == xaxis_column_name]
+    title = '<b>{}</b><br>{}'.format(country_name, xaxis_column_name)
+    return create_time_series(dff, axis_type, title)
+
+
+@app.callback(
+              dash.dependencies.Output('y-time-series', 'figure'),
+              [dash.dependencies.Input('crossfilter-indicator-scatter', 'hoverData'),
+               dash.dependencies.Input('crossfilter-yaxis-column', 'value'),
+               dash.dependencies.Input('crossfilter-yaxis-type', 'value')])
+def update_x_timeseries(hoverData, yaxis_column_name, axis_type):
+    dff = df[df['GEO'] == hoverData['points'][0]['customdata']]
+    dff = dff[dff['NA_ITEM'] == yaxis_column_name]
+    return create_time_series(dff, axis_type, yaxis_column_name)
+
 
 if __name__ == '__main__':
     app.run_server()
